@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZOMBIE DICE - BIOHAZARD PROTOCOL</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Special+Elite&family=Orbitron:wght@400;700&display=swap');
+
+        :root {
+            --bio-red: #bc0000;
+            --bio-green: #00ff41;
+            --bio-yellow: #f1c40f;
+            --ui-bg: #0a0a0a;
+        }
+
+        body {
+            font-family: 'Special Elite', cursive;
+            background-color: #050505;
+            background-image: 
+                linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.1) 50%),
+                linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03));
+            background-size: 100% 4px, 3px 100%;
+            color: #ddd;
+            display: flex;
+            margin: 0;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* --- SIDEBAR --- */
+        #sidebar {
+            width: 260px;
+            background: #111;
+            border-right: 3px solid var(--bio-red);
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 5px 0 15px rgba(0,0,0,0.7);
+            z-index: 10;
+        }
+
+        .umbrella-icon { font-size: 2.5rem; color: var(--bio-red); text-align: center; margin-bottom: 5px; }
+        h2.sidebar-title { font-family: 'Orbitron', sans-serif; font-size: 0.9rem; text-align: center; color: #eee; border-bottom: 1px solid #333; padding-bottom: 10px; margin-bottom: 20px; }
+
+        .player-score { background: rgba(40, 40, 40, 0.5); border: 1px solid #333; padding: 8px 12px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; }
+        .score-val { color: var(--bio-green); font-family: 'Orbitron', sans-serif; font-size: 1.1rem; }
+        .score-controls button { background: #222; color: var(--bio-red); border: 1px solid var(--bio-red); width: 26px; height: 26px; cursor: pointer; }
+
+        /* --- MAIN VIEWPORT --- */
+        #main-viewport { flex-grow: 1; display: flex; flex-direction: column; overflow-y: auto; padding: 20px; align-items: center; }
+        
+        .status-terminal {
+            font-family: 'Orbitron', sans-serif;
+            width: 85%;
+            max-width: 600px;
+            background: rgba(0, 0, 0, 0.85);
+            border-left: 5px solid var(--bio-green);
+            padding: 15px 20px;
+            margin-bottom: 20px;
+            font-size: 0.9rem;
+        }
+
+        .bag-trigger { cursor: pointer; text-align: center; transition: transform 0.2s; margin-bottom: 20px; }
+        .bag-trigger:hover { transform: scale(1.05); }
+
+        .dice-roll-area { display: flex; gap: 15px; min-height: 85px; margin-bottom: 25px; }
+        .die { width: 70px; height: 70px; background: #1a1a1a; border: 3px solid #444; border-radius: 8px; display: flex; align-items: center; justify-content: center; }
+        .die img { width: 75%; height: 75%; }
+
+        .btn-action {
+            font-family: 'Orbitron', sans-serif; background: #400; color: white; border: 1px solid var(--bio-red);
+            padding: 12px 35px; cursor: pointer; letter-spacing: 2px; clip-path: polygon(10% 0, 100% 0, 90% 100%, 0 100%);
+        }
+
+        /* --- INVENTORY GRID --- */
+        #inventory-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; width: 100%; max-width: 800px; margin-top: 30px; }
+        .inv-slot { background: rgba(255, 255, 255, 0.03); border: 1px solid #333; padding: 10px; min-height: 120px; text-align: center; }
+        .inv-slot h3 { font-size: 0.7rem; color: #888; margin-top: 0; text-transform: uppercase; border-bottom: 1px solid #222; }
+        .slot-content { display: flex; flex-wrap: wrap; gap: 5px; justify-content: center; padding-top: 10px; }
+        .slot-content img { width: 30px; }
+
+        /* --- BEAUTIFUL MODAL --- */
+        #custom-modal {
+            display: none;
+            position: fixed;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            width: 350px;
+            background: #111;
+            border: 2px solid var(--bio-red);
+            box-shadow: 0 0 50px rgba(188, 0, 0, 0.5);
+            z-index: 100;
+            padding: 20px;
+            text-align: center;
+            animation: modalFade 0.3s ease-out;
+        }
+
+        @keyframes modalFade { from { opacity: 0; transform: translate(-50%, -60%); } to { opacity: 1; transform: translate(-50%, -50%); } }
+
+        #modal-title { font-family: 'Orbitron', sans-serif; color: var(--bio-red); margin-bottom: 15px; font-size: 1.2rem; }
+        #modal-msg { font-size: 1rem; margin-bottom: 20px; color: #ccc; }
+        
+        .modal-close {
+            position: absolute; top: 5px; right: 10px;
+            color: #555; cursor: pointer; font-size: 1.2rem;
+        }
+        .modal-close:hover { color: white; }
+
+        .modal-btn {
+            font-family: 'Orbitron', sans-serif;
+            background: var(--bio-red); color: white; border: none;
+            padding: 8px 20px; cursor: pointer; font-size: 0.8rem;
+        }
+
+        #overlay {
+            display: none;
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.8); z-index: 99;
+        }
+
+        #audio-ctrl { position: fixed; bottom: 15px; right: 15px; background: rgba(0,0,0,0.8); padding: 8px; border: 1px solid #333; font-size: 0.7rem; }
+    </style>
+</head>
+<body>
+
+    <aside id="sidebar">
+        <div class="umbrella-icon">☣</div>
+        <h2 class="sidebar-title">S.T.A.R.S. ANALYZER</h2>
+        <div id="players-list"></div>
+    </aside>
+
+    <main id="main-viewport">
+        <div class="status-terminal" id="terminal-msg">> INICIAR TURNO...</div>
+
+        <div class="bag-trigger" onclick="rollDice()">
+            <img src="images/bolsa.png" alt="Bolsa" width="120">
+            <div style="color: var(--bio-red); font-size: 0.7rem; margin-top: 8px;">[ EXTRAER DADOS ]</div>
+        </div>
+
+        <div class="dice-roll-area" id="current-roll"></div>
+        <button class="btn-action" onclick="plantarse()">ASEGURAR Y PUNTUAR</button>
+
+        <div id="inventory-grid">
+            <div class="inv-slot"><h3>Cerebros</h3><div id="cerebros-list" class="slot-content"></div></div>
+            <div class="inv-slot"><h3>Escapados</h3><div id="pisadas-list" class="slot-content"></div></div>
+            <div class="inv-slot" style="background: rgba(188, 0, 0, 0.05);"><h3>Daño</h3><div id="disparos-list" class="slot-content"></div></div>
+        </div>
+    </main>
+
+    <div id="overlay"></div>
+    <div id="custom-modal">
+        <span class="modal-close" onclick="closeModal()">×</span>
+        <div id="modal-title">MENSAJE DEL SISTEMA</div>
+        <div id="modal-msg">Contenido del mensaje...</div>
+        <button class="modal-btn" onclick="closeModal()">ACEPTAR</button>
+    </div>
+
+    <div id="audio-ctrl">
+        VOL <input type="range" id="volume" min="0" max="1" step="0.1" value="0.5">
+        <button onclick="toggleMusic()" style="background:none; border:1px solid #444; color:#888; cursor:pointer;">MUTE</button>
+    </div>
+
+    <audio id="bg-music" loop><source src="audio/zombie.mp3" type="audio/mpeg"></audio>
+    <audio id="click-sound"><source src="audio/clic.mp3" type="audio/mpeg"></audio>
+    <audio id="shot-sound"><source src="audio/disparo.mp3" type="audio/mpeg"></audio>
+    <audio id="eating-sound"><source src="audio/eating.mp3" type="audio/mpeg"></audio>
+
+    <script>
+        const cupOriginal = [...Array(6).fill('verde'), ...Array(4).fill('amarillo'), ...Array(3).fill('rojo')];
+        let cup = [...cupOriginal], currentCerebros = 0, currentDisparos = 0, pisedasDados = [];
+        const faces = {
+            verde: ['cerebro_v', 'cerebro_v', 'cerebro_v', 'pisada_v', 'pisada_v', 'disparo_v'],
+            amarillo: ['cerebro_a', 'cerebro_a', 'pisada_a', 'pisada_a', 'disparo_a', 'disparo_a'],
+            rojo: ['cerebro_r', 'pisada_r', 'pisada_r', 'disparo_r', 'disparo_r', 'disparo_r']
+        };
+
+        // --- MÚSICA EN CUALQUIER CLICK ---
+        function startMusic() {
+            const m = document.getElementById('bg-music');
+            if(m.paused) m.play();
+            document.removeEventListener('click', startMusic);
+        }
+        document.addEventListener('click', startMusic);
+
+        // --- MARCADOR ---
+        const pList = document.getElementById('players-list');
+        for(let i=1; i<=6; i++) {
+            pList.innerHTML += `<div class="player-score"><span>S0${i}</span><span class="score-val" id="p${i}-val">00</span><div class="score-controls"><button onclick="changeScore(${i}, -1)">-</button><button onclick="changeScore(${i}, 1)">+</button></div></div>`;
+        }
+
+        function changeScore(id, val) {
+            const el = document.getElementById(`p${id}-val`);
+            let s = Math.max(0, parseInt(el.innerText) + val);
+            el.innerText = s.toString().padStart(2, '0');
+            playSound('click-sound');
+        }
+
+        // --- LÓGICA DE JUEGO ---
+        function rollDice() {
+            if(currentDisparos >= 3) return;
+            playSound('click-sound');
+            const needed = 3 - pisedasDados.length;
+            if (cup.length < needed) cup = [...cupOriginal];
+
+            let hand = [...pisedasDados];
+            for(let i=0; i<needed; i++) hand.push(cup.splice(Math.floor(Math.random() * cup.length), 1)[0]);
+
+            document.getElementById('pisadas-list').innerHTML = '';
+            pisedasDados = []; 
+            const rollArea = document.getElementById('current-roll');
+            rollArea.innerHTML = '';
+            
+            hand.forEach(color => {
+                const face = faces[color][Math.floor(Math.random() * 6)];
+                const d = document.createElement('div');
+                d.className = 'die';
+                d.style.borderColor = color === 'verde' ? 'var(--bio-green)' : color === 'amarillo' ? 'var(--bio-yellow)' : 'var(--bio-red)';
+                d.innerHTML = `<img src="images/${face}.png">`;
+                rollArea.appendChild(d);
+
+                if(face.startsWith('cerebro')) {
+                    currentCerebros++;
+                    document.getElementById('cerebros-list').innerHTML += `<img src="images/${face}.png">`;
+                } else if(face.startsWith('disparo')) {
+                    currentDisparos++;
+                    document.getElementById('disparos-list').innerHTML += `<img src="images/${face}.png">`;
+                } else {
+                    pisedasDados.push(color);
+                    document.getElementById('pisadas-list').innerHTML += `<img src="images/${face}.png">`;
+                }
+            });
+
+            updateTerminal(`ESTADO: ${currentDisparos}/3 IMPACTOS | CEREBROS: ${currentCerebros}`);
+
+            if(currentDisparos >= 3) {
+                playSound('shot-sound');
+                showModal("ESTADO: CRÍTICO", "HAS SIDO ELIMINADO. 0 PUNTOS.", true);
+                resetTurn();
+            }
+        }
+
+        function plantarse() {
+            if(currentCerebros === 0 && currentDisparos === 0) return;
+            playSound('eating-sound');
+            showModal("MISIÓN ASEGURADA", `HAS RECOPILADO ${currentCerebros} CEREBROS CON ÉXITO.`, false);
+            resetTurn();
+        }
+
+        // --- TERMINAL Y MODAL ---
+        function updateTerminal(txt) { document.getElementById('terminal-msg').innerHTML = `> ${txt}`; }
+
+        function showModal(title, msg, isDead) {
+            document.getElementById('modal-title').innerText = title;
+            document.getElementById('modal-title').style.color = isDead ? "var(--bio-red)" : "var(--bio-green)";
+            document.getElementById('modal-msg').innerText = msg;
+            document.getElementById('overlay').style.display = 'block';
+            document.getElementById('custom-modal').style.display = 'block';
+        }
+
+        function closeModal() {
+            document.getElementById('overlay').style.display = 'none';
+            document.getElementById('custom-modal').style.display = 'none';
+        }
+
+        function resetTurn() {
+            currentCerebros = 0; currentDisparos = 0; pisedasDados = []; cup = [...cupOriginal];
+            document.getElementById('current-roll').innerHTML = '';
+            ['cerebros-list', 'disparos-list', 'pisadas-list'].forEach(id => document.getElementById(id).innerHTML = '');
+        }
+
+        function playSound(id) { const s = document.getElementById(id); if(s) { s.currentTime = 0; s.play(); } }
+
+        function toggleMusic() { const m = document.getElementById('bg-music'); m.paused ? m.play() : m.pause(); }
+
+        document.getElementById('volume').oninput = (e) => {
+            const v = e.target.value;
+            ['bg-music','shot-sound','click-sound','eating-sound'].forEach(id => document.getElementById(id).volume = v);
+        };
+    </script>
+</body>
+</html>
