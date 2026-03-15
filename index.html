@@ -14,19 +14,15 @@
             --ui-bg: #0a0a0a;
         }
 
-        body {
-            font-family: 'Special Elite', cursive;
-            background-color: #050505;
-            background-image: 
-                linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.1) 50%),
-                linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03));
-            background-size: 100% 4px, 3px 100%;
-            color: #ddd;
-            display: flex;
-            margin: 0;
-            height: 100vh;
-            overflow: hidden;
-        }
+body {
+    font-family: 'Special Elite', cursive;
+    background-color: #050505; /* Mantenemos el negro de base por si el GIF tarda en cargar */
+    color: #ddd;
+    display: flex;
+    margin: 0;
+    height: 100vh;
+    overflow: hidden;
+}
 
         /* --- SIDEBAR --- */
         #sidebar {
@@ -48,7 +44,21 @@
         .score-controls button { background: #222; color: var(--bio-red); border: 1px solid var(--bio-red); width: 26px; height: 26px; cursor: pointer; }
 
         /* --- MAIN VIEWPORT --- */
-        #main-viewport { flex-grow: 1; display: flex; flex-direction: column; overflow-y: auto; padding: 20px; align-items: center; }
+#main-viewport { 
+    flex-grow: 1; 
+    display: flex; 
+    flex-direction: column; 
+    overflow-y: auto; 
+    padding: 20px; 
+    align-items: center; 
+    
+    /* --- NUEVAS LÍNEAS PARA EL FONDO GIF --- */
+    background-image: url('images/fondo.gif'); /* Asegúrate de que la ruta sea correcta */
+    background-size: cover;       /* Hace que ocupe todo el espacio disponible */
+    background-position: center;  /* Centra la imagen */
+    background-repeat: no-repeat; /* Evita que se duplique si el área es muy grande */
+    background-attachment: fixed; /* Mantiene el fondo quieto si haces scroll */
+}
         
         .status-terminal {
             font-family: 'Orbitron', sans-serif;
@@ -73,10 +83,19 @@
             padding: 12px 35px; cursor: pointer; letter-spacing: 2px; clip-path: polygon(10% 0, 100% 0, 90% 100%, 0 100%);
         }
 
+
+
+
         /* --- INVENTORY GRID --- */
         #inventory-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; width: 100%; max-width: 800px; margin-top: 30px; }
-        .inv-slot { background: rgba(255, 255, 255, 0.03); border: 1px solid #333; padding: 10px; min-height: 120px; text-align: center; }
-        .inv-slot h3 { font-size: 0.7rem; color: #888; margin-top: 0; text-transform: uppercase; border-bottom: 1px solid #222; }
+.inv-slot { 
+    background: rgba(0, 0, 0, 0.8); /* Fondo mucho más oscuro para contrastar con el GIF */
+    border: 3px solid #000000;      /* Borde negro más grueso (de 1px a 3px) */
+    padding: 10px; 
+    min-height: 120px; 
+    text-align: center;
+    box-shadow: 0 0 10px rgba(0,0,0,0.5); /* Sombra para dar profundidad sobre el fondo */
+}        .inv-slot h3 { font-size: 0.7rem; color: #888; margin-top: 0; text-transform: uppercase; border-bottom: 1px solid #222; }
         .slot-content { display: flex; flex-wrap: wrap; gap: 5px; justify-content: center; padding-top: 10px; }
         .slot-content img { width: 30px; }
 
@@ -175,9 +194,21 @@
         <button class="btn-action" onclick="plantarse()">ASEGURAR Y PUNTUAR</button>
 
         <div id="inventory-grid">
-            <div class="inv-slot"><h3>Cerebros</h3><div id="cerebros-list" class="slot-content"></div></div>
-            <div class="inv-slot"><h3>Escapados</h3><div id="pisadas-list" class="slot-content"></div></div>
-            <div class="inv-slot" style="background: rgba(188, 0, 0, 0.05);"><h3>Daño</h3><div id="disparos-list" class="slot-content"></div></div>
+
+<div class="inv-slot" style="background: rgba(60, 0, 0, 0.8); border: 3px solid #000;">
+    <h3>Cerebros</h3>
+    <div id="cerebros-list" class="slot-content"></div>
+</div>
+
+<div class="inv-slot" style="background: rgba(60, 0, 0, 0.8); border: 3px solid #000;">
+    <h3>Escapados</h3>
+    <div id="pisadas-list" class="slot-content"></div>
+</div>
+
+<div class="inv-slot" style="background: rgba(60, 0, 0, 0.8); border: 3px solid #000;">
+    <h3>Daños</h3>
+    <div id="disparos-list" class="slot-content"></div>
+</div>
         </div>
     </main>
 
