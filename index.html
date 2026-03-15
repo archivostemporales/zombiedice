@@ -197,53 +197,71 @@
         }
 
         // --- LÓGICA DE JUEGO ---
-        function rollDice() {
-            if(currentDisparos >= 3) return;
-            playSound('click-sound');
-            const needed = 3 - pisedasDados.length;
-            if (cup.length < needed) cup = [...cupOriginal];
+function rollDice() {
+    if(currentDisparos >= 3) return;
+    playSound('click-sound');
+    
+    const needed = 3 - pisedasDados.length;
+    
+    // Si no hay suficientes dados, rellenamos la bolsa
+    if (cup.length < needed) {
+        cup = [...cupOriginal];
+        updateTerminal("CONTENEDOR REABASTECIDO");
+    }
 
-            let hand = [...pisedasDados];
-            for(let i=0; i<needed; i++) hand.push(cup.splice(Math.floor(Math.random() * cup.length), 1)[0]);
+    let hand = [...pisedasDados];
+    for(let i=0; i<needed; i++) {
+        const index = Math.floor(Math.random() * cup.length);
+        hand.push(cup.splice(index, 1)[0]);
+    }
 
-            document.getElementById('pisadas-list').innerHTML = '';
-            pisedasDados = []; 
-            const rollArea = document.getElementById('current-roll');
-            rollArea.innerHTML = '';
-            
-            hand.forEach(color => {
-                const face = faces[color][Math.floor(Math.random() * 6)];
-                const d = document.createElement('div');
-                d.className = 'die';
-                d.style.borderColor = color === 'verde' ? 'var(--bio-green)' : color === 'amarillo' ? 'var(--bio-yellow)' : 'var(--bio-red)';
-                d.innerHTML = `<img src="images/${face}.png">`;
-                rollArea.appendChild(d);
+    document.getElementById('pisadas-list').innerHTML = '';
+    pisedasDados = []; 
+    const rollArea = document.getElementById('current-roll');
+    rollArea.innerHTML = '';
+    
+    hand.forEach(color => {
+        const face = faces[color][Math.floor(Math.random() * 6)];
+        const d = document.createElement('div');
+        d.className = 'die';
+        d.style.borderColor = color === 'verde' ? 'var(--bio-green)' : color === 'amarillo' ? 'var(--bio-yellow)' : 'var(--bio-red)';
+        d.innerHTML = `<img src="images/${face}.png">`;
+        rollArea.appendChild(d);
 
-                if(face.startsWith('cerebro')) {
-                    currentCerebros++;
-                    document.getElementById('cerebros-list').innerHTML += `<img src="images/${face}.png">`;
-                } else if(face.startsWith('disparo')) {
-                    currentDisparos++;
-                    document.getElementById('disparos-list').innerHTML += `<img src="images/${face}.png">`;
-                } else {
-                    pisedasDados.push(color);
-                    document.getElementById('pisadas-list').innerHTML += `<img src="images/${face}.png">`;
-                }
-            });
-
-            updateTerminal(`ESTADO: ${currentDisparos}/3 IMPACTOS | CEREBROS: ${currentCerebros}`);
-
-            if(currentDisparos >= 3) {
-                playSound('shot-sound');
-                showModal("ESTADO: CRÍTICO", "HAS SIDO ELIMINADO. 0 PUNTOS.", true);
-                resetTurn();
-            }
+        if(face.startsWith('cerebro')) {
+            currentCerebros++;
+            document.getElementById('cerebros-list').innerHTML += `<img src="images/${face}.png">`;
+        } else if(face.startsWith('disparo')) {
+            currentDisparos++;
+            document.getElementById('disparos-list').innerHTML += `<img src="images/${face}.png">`;
+        } else {
+            pisedasDados.push(color);
+            document.getElementById('pisadas-list').innerHTML += `<img src="images/${face}.png">`;
         }
+    });
+
+    // --- AQUÍ ESTÁ EL CAMBIO CLAVE ---
+    // Contamos cuántos quedan de cada color en el array 'cup'
+    const v = cup.filter(d => d === 'verde').length;
+    const a = cup.filter(d => d === 'amarillo').length;
+    const r = cup.filter(d => d === 'rojo').length;
+
+    // Actualizamos la terminal con el estado de salud y los dados en la bolsa
+    updateTerminal(`ESTADO: ${currentDisparos}/3 IMPACTOS | CEREBROS: ${currentCerebros}<br>
+    > BOLSA: [V:${v} | A:${a} | R:${r}]`);
+    // --------------------------------
+
+    if(currentDisparos >= 3) {
+        playSound('shot-sound');
+        showModal("ESTADO: CRÍTICO", "HAS SIDO ELIMINADO. 0 PUNTOS.", true);
+        resetTurn();
+    }
+}
 
         function plantarse() {
             if(currentCerebros === 0 && currentDisparos === 0) return;
             playSound('eating-sound');
-            showModal("MISIÓN ASEGURADA", `HAS RECOPILADO ${currentCerebros} CEREBROS CON ÉXITO.`, false);
+            showModal("PUNTUACIÓN ASEGURADA", `HAS RECOPILADO ${currentCerebros} CEREBROS CON ÉXITO.`, false);
             resetTurn();
         }
 
